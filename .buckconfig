@@ -1,0 +1,7 @@
+[project]
+ignore = .git
+
+[cxx]
+untracked_headers = error
+cc = /usr/bin/gcc
+cxx = /usr/bin/g++

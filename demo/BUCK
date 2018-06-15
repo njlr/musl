@@ -1,0 +1,12 @@
+cxx_binary(
+  name = 'demo', 
+  srcs = [
+    'hello-world.c', 
+  ], 
+  compiler_flags = [
+    '-nostdinc', 
+  ], 
+  deps = [
+    '//:musl', 
+  ],
+)
