@@ -1,0 +1,2 @@
+target = "//:musl"
+tags = [ "c-standard-library" ]
