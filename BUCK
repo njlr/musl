@@ -53,10 +53,33 @@ genrule(
   cmd = 'cd $SRCDIR && printf \'#define VERSION "%s"\n\' \$(sh $SRCDIR/tools/version.sh) > $OUT', 
 )
 
+
+
 linux_srcs = glob([
   'src/*/x86_64/**/*.c', 
   # 'src/*/x86_64/**/*.s', 
 ])
+
+cxx_library(
+  name = 'musl-crt1',
+  srcs = ['crt/crt1.c'],
+  linker_flags = [
+    '-nostdlib'
+  ],
+  compiler_flags = [
+    '-nostdinc',
+    '-ffreestanding',
+    '-ffunction-sections',
+    '-fdata-sections'
+  ],
+  preprocessor_flags = [
+    '-DCRT'
+  ],
+  headers = subdir_glob([
+    ('arch/'+arch, '**/*.h'),
+    ('include', '**/*.h')
+  ])
+)
 
 cxx_library(
   name = 'musl-internal', 
@@ -73,6 +96,7 @@ cxx_library(
     ]), 
     subdir_glob([
       ('src', '**/*.h'), 
+      #('ldso', '**/*.c'), 
       ('src/passwd', '**/*.h'), 
       ('src/ctype', '**/*.h'), 
       ('src/time', '**/*.h'), 
@@ -84,39 +108,39 @@ cxx_library(
       'bits/alltypes.h': ':alltypes', 
       'bits/syscall.h': ':syscall', 
     }, 
-  ]), 
+  ]),
   srcs = glob([
+    'src/*/x86_64/*.s',
     'src/**/*.c', 
   ], excludes = glob([
-    'src/math/*/**/*.c', 
-    'src/*/*/**/*.c', 
-  ])), 
+      'src/*/*/**/*.c',
+    ]) + [ x.replace('/'+arch,'').replace('.s','.c') for x in glob(['src/*/x86_64/*.s'])]
+  ),
   platform_srcs = [
-    ('^linux.*', linux_srcs), 
-    ('.*', linux_srcs), 
-  ], 
-  preprocessor_flags = [
-    '-D_XOPEN_SOURCE=700', 
+    ('^linux.*', linux_srcs),
+    ('.*', linux_srcs),
   ],
+  preprocessor_flags = [
+    '-D_XOPEN_SOURCE=700'
+  ],
+  linker_flags=["-nostdlib" ],
   compiler_flags = [
-    '-std=c11', 
-    '-nostdinc', 
-    '-ffreestanding', 
-    '-fexcess-precision=standard', 
-    '-frounding-math', 
-    '-Os', 
-    '-pipe', 
-    '-fomit-frame-pointer', 
-    '-fno-unwind-tables', 
-    '-fno-asynchronous-unwind-tables', 
-    '-ffunction-sections', 
-    '-fdata-sections', 
-    '-Werror=implicit-function-declaration', 
-    '-Werror=implicit-int', 
-    '-Werror=pointer-sign', 
-    '-Werror=pointer-arith',
-    '-fno-stack-protector', 
-    '-shared', 
+    '-std=c99',
+    '-nostdinc',
+    '-nostdlib',
+    '-nodefaultlibs',
+    '-fno-stack-protector', # only needed for .s files
+    '-fno-unwind-tables',
+    #'-fno-tree-loop-distribute-patterns', # only needed for memove.c for gcc
+    '-fno-asynchronous-unwind-tables',
+    '-fomit-frame-pointer',
+    '-ffreestanding',
+    '-ffunction-sections',
+    '-fdata-sections',
+    '-fPIC', # required for clang / when link_style=shared then buck adds automatically 
+    #'-fexcess-precision=standard', #not required
+    #'-frounding-math', #not required
+    '-Os', '-O3' # not required
   ],
   visibility = [
     'PUBLIC', 
@@ -131,7 +155,8 @@ prebuilt_cxx_library(
     ('include', '**/*.h'), 
   ]), 
   deps = [
-    ':musl-internal', 
+    ':musl-crt1', # different versions of crt available
+    ':musl-internal',
   ], 
   visibility = [
     'PUBLIC', 

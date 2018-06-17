@@ -5,6 +5,7 @@ cxx_binary(
   ], 
   compiler_flags = [
     '-nostdinc', 
+    '-DFOOBAR',
   ], 
   deps = [
     '//:musl', 

@@ -9,7 +9,6 @@ expm1l:
 	fucomip %st(1),%st
 	fld1
 	jb 1f
-		# x*log2e <= -65, return -1 without underflow
 	fstp %st(1)
 	fchs
 	ret
@@ -37,30 +36,30 @@ exp2l:
 	mov 8(%rsp),%ax
 	and $0x7fff,%ax
 	cmp $0x3fff+13,%ax
-	jb 4f             # |x| < 8192
+	jb 4f           
 	cmp $0x3fff+15,%ax
-	jae 3f            # |x| >= 32768
+	jae 3f         
 	fsts (%rsp)
 	cmpl $0xc67ff800,(%rsp)
-	jb 2f             # x > -16382
+	jb 2f         
 	movl $0x5f000000,(%rsp)
-	flds (%rsp)       # 0x1p63
+	flds (%rsp)  
 	fld %st(1)
 	fsub %st(1)
 	faddp
 	fucomip %st(1),%st
-	je 2f             # x - 0x1p63 + 0x1p63 == x
+	je 2f        
 	movl $1,(%rsp)
-	flds (%rsp)       # 0x1p-149
+	flds (%rsp) 
 	fdiv %st(1)
-	fstps (%rsp)      # raise underflow
+	fstps (%rsp)
 2:	fld1
 	fld %st(1)
 	frndint
 	fxch %st(2)
-	fsub %st(2)       # st(0)=x-rint(x), st(1)=1, st(2)=rint(x)
+	fsub %st(2) 
 	f2xm1
-	faddp             # 2^(x-rint(x))
+	faddp      
 1:	fscale
 	fstp %st(1)
 	add $16,%rsp
@@ -68,7 +67,7 @@ exp2l:
 3:	xor %eax,%eax
 4:	cmp $0x3fff-64,%ax
 	fld1
-	jb 1b             # |x| < 0x1p-64
+	jb 1b     
 	fstpt (%rsp)
 	fistl 8(%rsp)
 	fildl 8(%rsp)
@@ -76,8 +75,8 @@ exp2l:
 	addl $0x3fff,8(%rsp)
 	f2xm1
 	fld1
-	faddp             # 2^(x-rint(x))
-	fldt (%rsp)       # 2^rint(x)
+	faddp     
+	fldt (%rsp)
 	fmulp
 	add $16,%rsp
 	ret
