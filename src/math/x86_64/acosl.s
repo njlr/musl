@@ -1,5 +1,3 @@
-# see ../i386/acos.s
-
 .global acosl
 .type acosl,@function
 acosl:

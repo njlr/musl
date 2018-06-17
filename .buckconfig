@@ -3,5 +3,6 @@ ignore = .git
 
 [cxx]
 untracked_headers = error
-cc = /usr/bin/gcc
+
+cc = /usr/bin/clang-6.0
 cxx = /usr/bin/g++
